@@ -9,7 +9,7 @@ public class Main {
                 Thread.sleep(1000);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
-                System.exit(-1);
+                System.exit(1);
             }
             clockExample.run();
         }
