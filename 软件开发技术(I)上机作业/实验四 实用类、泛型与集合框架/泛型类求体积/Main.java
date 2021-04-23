@@ -4,7 +4,7 @@ public class Main {
         Triangle triangle = new Triangle(10, 20);
         Trapezium trapezium = new Trapezium(2, 18, 30);
         Circle circle = new Circle(50);
-        Column column;
+        Column<?> column = new Column<Geometry>(() -> 1, 2);
         System.out.println("三棱柱的体积：");
         column = new Column<Triangle>(triangle, 10);
         System.out.println(column.computeVolume());

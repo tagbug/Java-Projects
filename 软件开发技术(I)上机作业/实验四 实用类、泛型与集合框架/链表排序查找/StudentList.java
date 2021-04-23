@@ -1,9 +1,14 @@
 package 链表排序查找;
 
-import java.util.Comparator;
 import java.util.LinkedList;
-import java.util.ListIterator;
 
+/**
+ * <p>以链表形式存储学生个人信息表
+ * <p>依赖{@link StudentInfo}、{@link LinkedList} 
+ * @author TagBug
+ * @version 0.1
+ * @since 1.10
+ */
 public class StudentList {
     private LinkedList<StudentInfo> studentInfos;
 
@@ -28,40 +33,39 @@ public class StudentList {
         return studentInfos.remove(index);
     }
 
+    /**
+     * @param score 学生总分
+     * @return 学生个人信息
+     */
     public StudentInfo searchByScore(int score) {
-        ListIterator<StudentInfo> iterator=studentInfos.listIterator();
-        StudentInfo studentInfo;
-        while (iterator.hasNext()) {
-            studentInfo = iterator.next();
-            if (studentInfo.getScore() == score) {
-                return studentInfo;
-            }
+        for (var info : studentInfos) {
+            if (info.getScore()==score)
+                return info;
         }
-        return new StudentInfo();
+        return null;
     }
     
+    /**
+     * @param score 学生姓名
+     * @return 学生个人信息
+     */
     public StudentInfo searchByName(String name) {
-        ListIterator<StudentInfo> iterator = studentInfos.listIterator();
-        StudentInfo studentInfo;
-        while (iterator.hasNext()) {
-            studentInfo = iterator.next();
-            if (studentInfo.getName().equals(name)) {
-                return studentInfo;
-            }
+        for (var info : studentInfos) {
+            if(info.getName().equals(name))
+                return info;
         }
-        return new StudentInfo();
+        return null;
     }
     
     public void sortByScore() {
-        studentInfos.sort(Comparator.comparingInt(StudentInfo::getScore));
+        studentInfos.sort((x, y) -> x.compareTo(y));// 调用StudentInfo的默认比较方法，实现按分数排序
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        ListIterator<StudentInfo> iterator = studentInfos.listIterator();
-        while (iterator.hasNext()) {
-            sb.append(iterator.next().toString());
+        for (StudentInfo info : studentInfos) {
+            sb.append(info.toString());
         }
         return sb.toString();
     }

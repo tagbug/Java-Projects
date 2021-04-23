@@ -5,13 +5,7 @@ public abstract class RedEnvelope {
     protected int peopleLeft;
 
     RedEnvelope(double money, int people) {
-        if (money > 0 && people > 0) {
-            moneyLeft = Math.round(money * 100) / 100;// 将面额最小值处理到分
-            peopleLeft = people;
-        } else {
-            moneyLeft = 0;
-            peopleLeft = 0;
-        }
+        reset(money, people);
     }
 
     public abstract double giveMoney();

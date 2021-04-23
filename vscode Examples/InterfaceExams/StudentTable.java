@@ -15,11 +15,13 @@ public class StudentTable extends Table {
     private ArrayList<Integer> IDs = new ArrayList<Integer>();
     private ArrayList<Double> scores = new ArrayList<Double>();
     private ArrayList<StudentState> states = new ArrayList<StudentState>();
+    private ArrayList<?>[] data = { names, IDs, scores, states };
 
     StudentTable() {
         System.out.println("建立空表");
     }
 
+    @SuppressWarnings("unchecked")
     StudentTable(ArrayList<?> datas, DataType type) {
         try {
             switch (type) {
@@ -69,6 +71,10 @@ public class StudentTable extends Table {
         Check(IDs);
         Check(scores);
         Check(states);
+        data[0] = names;
+        data[1] = IDs;
+        data[2] = scores;
+        data[3] = states;
     }
 
     private void Check(ArrayList<?> datas) {
@@ -93,33 +99,55 @@ public class StudentTable extends Table {
         }
     }
 
-    private ArrayList GetTypeData(DataType type) {
+    private ArrayList<?> GetTypeData(DataType type) {
         switch (type) {
         case Name:
-            return names;
+            return (ArrayList<?>) names;
         case ID:
-            return IDs;
+            return (ArrayList<?>) IDs;
         case Score:
-            return scores;
+            return (ArrayList<?>) scores;
         case State:
-            return states;
+            return (ArrayList<?>) states;
         default:
             System.out.println("GetTypeData:传入错误的类型");
             return null;
         }
     }
 
+    public ArrayList<?> GetArray(DataType type) {
+        switch (type) {
+        case Name:
+            return (ArrayList<?>) names.clone();
+        case ID:
+            return (ArrayList<?>) IDs.clone();
+        case Score:
+            return (ArrayList<?>) scores.clone();
+        case State:
+            return (ArrayList<?>) states.clone();
+        default:
+            System.out.println("GetTypeData:传入错误的类型");
+            return null;
+        }
+    }
+
+    public ArrayList<?> GetArray(int idx) {
+        return data[idx];
+    }
+
+    @SuppressWarnings("unchecked")
     public void update(Object data, int index, DataType type) {
         if (TypeCheck(data, type)) {
-            GetTypeData(type).set(index, data);
+            ((ArrayList<Object>) GetTypeData(type)).set(index, data);
         } else {
             System.out.println("update:数据类型不符");
         }
     }
 
-    public void add(Object data,DataType type) {
+    @SuppressWarnings("unchecked")
+    public void add(Object data, DataType type) {
         if (TypeCheck(data, type)) {
-            GetTypeData(type).add(data);
+            ((ArrayList<Object>) GetTypeData(type)).add(data);
             size += 1;
             CheckAll();
         } else {
@@ -133,9 +161,7 @@ public class StudentTable extends Table {
             System.out.println("<--空表-->");
         } else {
             System.out.println("姓名\t学号\t绩点\t状态");
-            for (int i = 0; i < size; i++) {
-                System.out.println(names.get(i) + "\t" + IDs.get(i) + "\t" + scores.get(i) + "\t" + states.get(i));
-            }
+            System.out.println(this.toString());
         }
     }
 
@@ -152,19 +178,34 @@ public class StudentTable extends Table {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < size; i++) {
-            sb.append(names.get(i));
-            sb.append("\t");
-            sb.append(IDs.get(i));
-            sb.append("\t");
-            sb.append(scores.get(i));
-            sb.append("\t");
-            sb.append(states.get(i));
+            for (int j = 0; j < 4; j++) {
+                var e = data[j].get(i);
+                sb.append(e == null ? "" : e);
+                sb.append("\t");
+            }
             sb.append("\n");
         }
         return sb.toString();
     }
 
-    public int compareTo(Object other) {
+    @Override
+    public boolean equals(Object otherObject) {
+        if (this == otherObject)
+            return true;
+        if (otherObject == null)
+            return false;
+        if (getClass() != otherObject.getClass())
+            return false;
+        var other = (StudentTable) otherObject;
+        for (var i = 0; i < 4; i++) {
+            if (!other.GetArray(i).containsAll(this.GetArray(i)))
+                return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int compareTo(Table other) {
         System.out.println("调用compareTo()方法");
         return 0;
     }

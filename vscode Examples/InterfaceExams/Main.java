@@ -17,14 +17,14 @@ public class Main {
         studentTable.show();
         System.out.println("---更新信息后：");
         for (int i = 0; i < 4; i++) {
-            studentTable.update(new Integer(320060 + i), i, DataType.ID);
-            studentTable.update(new Double(1.0 + i), i, DataType.Score);
+            studentTable.update(320060 + i, i, DataType.ID);
+            studentTable.update(1.0 + i, i, DataType.Score);
             studentTable.update(StudentState.Live, i, DataType.State);
         }
         studentTable.show();
         System.out.println("---增加表信息后：");
-        studentTable.add(new Integer(100000), DataType.State);
-        studentTable.add(new Integer(100000), DataType.ID);
+        studentTable.add(100000, DataType.State);
+        studentTable.add(100000, DataType.ID);
         studentTable.update("管理员", 4, DataType.Name);
         studentTable.update(StudentState.Holiday, 4, DataType.State);
         studentTable.show();

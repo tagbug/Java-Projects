@@ -1,6 +1,6 @@
 package InterfaceExams;
 
-abstract class Table implements Compareable, Sortable {
+abstract class Table implements Comparable<Table>, Sortable {
     protected int size = 0;
 
     public abstract void show();

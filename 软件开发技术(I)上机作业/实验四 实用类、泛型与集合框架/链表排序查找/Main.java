@@ -7,10 +7,7 @@ public class Main {
         StudentInfo[] studentInfos = new StudentInfo[5];
         StudentList studentList = new StudentList();
         for (int i = 0; i < 5; i++) {
-            studentInfos[i] = new StudentInfo();
-            studentInfos[i].setName(names[i]);
-            studentInfos[i].setId(4200608000L + i);
-            studentInfos[i].setScore(scores[i]);
+            studentInfos[i] = new StudentInfo(names[i], 4200608000L + i, scores[i]);
             studentList.add(studentInfos[i]);
         }
         System.out.println("排序前的学生信息表：");
@@ -19,13 +16,21 @@ public class Main {
         studentList.sortByScore();
         System.out.println(studentList.toString());
         System.out.println("找出总成绩为 350 的学生：");
-        StudentInfo sInfo = studentList.searchByScore(350);
-        System.out.print(sInfo.toString());
-        System.out.println("其姓名为：" + sInfo.getName() + "\n");
+        var sInfo = studentList.searchByScore(350);
+        if (sInfo != null) {
+            System.out.print(sInfo.toString());
+            System.out.println("其姓名为：" + sInfo.getName() + "\n");
+        } else {
+            System.out.println("查无此人！");
+        }
         System.out.println("找出姓名为 小王 的学生：");
         sInfo = studentList.searchByName("小王");
-        System.out.print(sInfo.toString());
-        System.out.println("其总成绩为：" + sInfo.getScore() + "\n");
+        if (sInfo != null) {
+            System.out.print(sInfo.toString());
+            System.out.println("其总成绩为：" + sInfo.getScore() + "\n");
+        } else {
+            System.out.println("查无此人！");
+        }
         System.out.println("学号：3200608080，姓名：陈欣阳");
     }
 }
