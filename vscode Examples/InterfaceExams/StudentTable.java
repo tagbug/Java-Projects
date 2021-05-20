@@ -155,6 +155,21 @@ public class StudentTable extends Table {
         }
     }
 
+    public String queryByName(String name) {
+        var iter = names.iterator();
+        for (int i = 0; i < names.size(); i++) {
+            if (iter.next().equals(name)) {
+                StringBuilder sb = new StringBuilder();
+                for (var data : data) {
+                    sb.append(data.get(i));
+                    sb.append("\t");
+                }
+                return sb.toString();
+            }
+        }
+        return "没有查询到：" + name;
+    }
+
     @Override
     public void show() {
         if (size == 0) {

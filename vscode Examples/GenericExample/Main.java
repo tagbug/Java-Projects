@@ -15,6 +15,9 @@ public class Main {
         Pair<String> p = makePair(String::new);
         String[] arr = makeTArr(String[]::new);
         Pair<String> pp = makeTArr2(Pair::new);
+        System.out.println(p.toString());
+        System.out.println(arr.toString());
+        System.out.println(pp.toString());
     }
 
     @SafeVarargs

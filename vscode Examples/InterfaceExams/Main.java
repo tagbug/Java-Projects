@@ -1,6 +1,8 @@
 package InterfaceExams;
 
 import java.util.ArrayList;
+import java.util.Scanner;
+
 import InterfaceExams.StudentTable.DataType;
 import InterfaceExams.StudentTable.StudentState;
 
@@ -28,10 +30,8 @@ public class Main {
         studentTable.update("管理员", 4, DataType.Name);
         studentTable.update(StudentState.Holiday, 4, DataType.State);
         studentTable.show();
-        System.out.println("---调用toString()：");
-        System.out.print(studentTable.toString());
-        System.out.println("---调用clean()后：");
-        studentTable.clean();
-        studentTable.show();
+        Scanner in = new Scanner(System.in);
+        System.out.println(studentTable.queryByName(in.nextLine()));
+        in.close();
     }
 }
