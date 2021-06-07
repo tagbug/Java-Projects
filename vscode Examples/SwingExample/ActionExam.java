@@ -28,7 +28,7 @@ class WindowActionEvent extends JFrame {
         PoliceAction action = new PoliceAction();
         action.setInput(text);
         action.setShow(area);
-        text.addActionListener(action);
+        text.addActionListener(System.out::println);
         add(text);
         add(new JScrollPane(area));
     }
