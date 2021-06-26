@@ -5,6 +5,7 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import GUI.QueryRequest;
 
@@ -12,8 +13,7 @@ public class Server {
     public static void main(String[] args) {
         try {
             var dbBridge = new DbBridge();
-            try (var serverSocket = new ServerSocket(6666)) {
-                System.out.println("学号：3200608080，姓名：陈欣阳");
+            try (var serverSocket = new ServerSocket(6666)/* 监听端口6666 */) {
                 System.out.println("正在监听...");
                 while (true) {
                     // 监听客户端并建立多线程化连接
@@ -22,7 +22,9 @@ public class Server {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        } catch (ClassNotFoundException | SQLException e) {
+        } catch (ClassNotFoundException e) {
+            System.out.println("驱动加载失败！" + e);
+        } catch (SQLException e) {
             System.out.println("数据库连接失败！" + e);
         }
     }
@@ -31,10 +33,12 @@ public class Server {
 class serverThread implements Runnable {
     private Socket socket;
     private DbBridge dbBridge;
+    private static final ArrayList<String> ERR_RESULT = new ArrayList<>();
 
     serverThread(Socket socket, DbBridge dbBridge) {
         this.socket = socket;
         this.dbBridge = dbBridge;
+        ERR_RESULT.add("服务器错误！");
         System.out.println("IP:" + socket.getInetAddress() + ",客户" + hashCode() + "已建立连接...");
     }
 
@@ -45,15 +49,21 @@ class serverThread implements Runnable {
                 var outputStream = new ObjectOutputStream(socket.getOutputStream())) {
             while (true) {
                 var request = (QueryRequest) inputStream.readObject();
-                switch (request.getType()) {
-                    case ID:
-                        outputStream.writeObject(dbBridge.queryById(request.getData()));
-                        break;
-                    case NAME:
-                        outputStream.writeObject(dbBridge.queryByName(request.getData()));
-                        break;
-                    default:
-                        break;
+                try {
+                    switch (request.getType()) {
+                        case ID:
+                            outputStream.writeObject(dbBridge.queryById(request.getData()));
+                            break;
+                        case NAME:
+                            outputStream.writeObject(dbBridge.queryByName(request.getData()));
+                            break;
+                        default:
+                            break;
+                    }
+                } catch (SQLException e) {
+                    // 发生意料之外的错误
+                    e.printStackTrace();
+                    outputStream.writeObject(ERR_RESULT);
                 }
             }
         } catch (Exception e) {

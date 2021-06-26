@@ -6,6 +6,12 @@ import java.sql.SQLException;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
 
+/**
+ * 主窗体
+ * 
+ * @since 10
+ * @author TagBug {@link https://github.com/tagbug}
+ */
 public class MainFrame extends JFrame {
     private DbBridge dbBridge;
 
@@ -25,5 +31,15 @@ public class MainFrame extends JFrame {
         tabPanel.add("我要注册", registerPanel);
         tabPanel.add("我要登陆", loginPanel);
         add(tabPanel, BorderLayout.CENTER);
+    }
+
+    public static void main(String[] args) {
+        try {
+            new MainFrame();
+        } catch (ClassNotFoundException e) {
+            System.out.println("驱动加载失败！" + e);
+        } catch (SQLException e) {
+            System.out.println("数据库连接失败！" + e);
+        }
     }
 }

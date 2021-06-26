@@ -13,7 +13,7 @@ public class BoardCast {
             group = InetAddress.getByName("239.255.8.0");// 设置广播组的地址为239.255.8.0
             socket = new MulticastSocket(port);// 多点广播套接字将在port端口广播
             socket.setTimeToLive(1);// 多点广播套接字发送数据报范围为本地网络
-            socket.joinGroup(group);// 加入group后，socket发送的数据报被group中的成员接收到
+            // （此方法已被弃用）socket.joinGroup(group);// 加入group后，socket发送的数据报被group中的成员接收到
         } catch (Exception e) {
             System.out.println("Error：" + e);
         }

@@ -39,22 +39,20 @@ class ReceiveLetterForLi implements Runnable {
     @Override
     public void run() {
         DatagramPacket pack = null;
-        DatagramSocket postman = null;
         byte data[] = new byte[8192];
-        try {
+        try (var postman = new DatagramSocket(666);){
             pack = new DatagramPacket(data, data.length);
-            postman = new DatagramSocket(666);
-        } catch (Exception e) {
-        }
-        while (true) {
-            if (postman == null)
-                return;
-            try {
-                postman.receive(pack);
-                String message = new String(pack.getData(), 0, pack.getLength());
-                System.out.printf("%25s\n", "收到：" + message);
-            } catch (Exception e) {
+            while (true) {
+                if (postman == null)
+                    return;
+                try {
+                    postman.receive(pack);
+                    String message = new String(pack.getData(), 0, pack.getLength());
+                    System.out.printf("%25s\n", "收到：" + message);
+                } catch (Exception e) {
+                }
             }
+        } catch (Exception e) {
         }
     }
 

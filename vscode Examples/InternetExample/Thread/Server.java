@@ -5,24 +5,22 @@ import java.io.*;
 
 public class Server {
     public static void main(String[] args) {
-        ServerSocket server = null;
         Socket you = null;
-        try {
-            server = new ServerSocket(2010);
+        try (var server = new ServerSocket(2010);){
+            while (true) {
+                try {
+                    System.out.println("等待客户端呼叫...");
+                    you = server.accept();
+                    System.out.println("客户端地址：" + you.getInetAddress());
+                } catch (IOException e) {
+                    System.out.println("正在等待客户端..." + e);
+                }
+                if (you != null) {
+                    new ServerThread(you).start();
+                }
+            }
         } catch (IOException e) {
             System.out.println("正在监听，不能重复创建.." + e);// ServerSocket对象不能重复创建
-        }
-        while (true) {
-            try {
-                System.out.println("等待客户端呼叫...");
-                you = server.accept();
-                System.out.println("客户端地址：" + you.getInetAddress());
-            } catch (IOException e) {
-                System.out.println("正在等待客户端..." + e);
-            }
-            if (you != null) {
-                new ServerThread(you).start();
-            }
         }
     }
 }
