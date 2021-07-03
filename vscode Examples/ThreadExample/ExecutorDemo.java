@@ -66,20 +66,42 @@ public class ExecutorDemo {
         };
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         try (var in = new Scanner(System.in)) {
             System.out.print("Enter base directory (e.g. D:/repos/Java Projects): ");
             String start = in.nextLine();
             System.out.print("Enter keyword (e.g. java): ");
             String word = in.nextLine();
-            
+
             Set<Path> files = descendants(Path.of(start));
             var tasks = new ArrayList<Callable<Long>>();
             for (Path file : files) {
                 Callable<Long> task = () -> occurrences(word, file);
                 tasks.add(task);
             }
-            
+            ExecutorService executor = Executors.newCachedThreadPool();
+            // use a single thread executor instead to see if multiple threads speed up the
+            // search
+            // ExecutorService executor = Executors.newSingleThreadExecutor();
+
+            Instant startTime = Instant.now();
+            List<Future<Long>> results = executor.invokeAll(tasks);
+            long total = 0;
+            for (Future<Long> result : results)
+                total += result.get();
+            Instant endTime = Instant.now();
+            System.out.println("Occurrences of " + word + ": " + total);
+            System.out.println("Time elapsed: " + Duration.between(startTime, endTime).toMillis() + " ms");
+
+            var searchTasks = new ArrayList<Callable<Path>>();
+            for (Path file : files)
+                searchTasks.add(searchForTask(word, file));
+            Path found = executor.invokeAny(searchTasks);
+            System.out.println(word + " occurs in: " + found);
+
+            if (executor instanceof ThreadPoolExecutor)// the single thread executor isn't
+                System.out.println("Largest pool size: " + ((ThreadPoolExecutor) executor).getLargestPoolSize());
+            executor.shutdown();
         }
     }
 }
