@@ -1,4 +1,4 @@
-package Server;
+package Server.util;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -10,7 +10,6 @@ import java.util.Map;
 import Data.ClientRequest;
 import Data.ServerResponse;
 import Server.excepitons.DbException;
-import Server.util.DbBridge;
 
 /**
  * 会话线程，每个线程对应一次会话请求

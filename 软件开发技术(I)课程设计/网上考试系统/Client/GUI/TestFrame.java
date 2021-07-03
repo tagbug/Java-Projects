@@ -1,6 +1,5 @@
 package Client.GUI;
 
-import java.awt.Font;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
@@ -29,6 +28,7 @@ public class TestFrame extends JFrame {
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         init();
+        setVisible(true);
         validate();
         repaint();
     }
