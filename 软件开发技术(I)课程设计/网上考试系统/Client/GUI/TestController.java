@@ -16,18 +16,23 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 考生窗口Controller
+ * 
+ * @since 10
+ */
 public class TestController implements ActionListener {
     private ClientSocket clientSocket;
     private ArrayList<TestQuestionPanel> questionPanel;// 试题库页面容器
+    private TestQuestionPanel nowPanel;// 目前的题目库容器
     private ArrayList<QuestionPanel> qPanels;// 题目容器
-    private JTabbedPane tabbedPanel;
-    private TestFrame window;
-    private TestQuestionPanel nowPanel;
-    private ArrayList<Map<String, String>> nowQuestionList;
-    private int nowPos;
-    private int maxPos;
-    private Timer lastTimer;
-    private Date lastTime;
+    private JTabbedPane tabbedPanel;// 选项卡Panel
+    private TestFrame window;// 考生窗口
+    private ArrayList<Map<String, String>> nowQuestionList;// 目前的题目信息数组
+    private int nowPos;// 目前题目的位置
+    private int maxPos;// 最大题目位置
+    private Timer lastTimer;// 考试时间计时器
+    private Date lastTime;// 交卷时间
     private static final int PER_QUESTION_TIME = 30;// 每道题给多长时间作答（秒）
 
     TestController(TestFrame window, ClientSocket clientSocket, JTabbedPane tabbedPane,
@@ -36,21 +41,27 @@ public class TestController implements ActionListener {
         this.clientSocket = clientSocket;
         this.tabbedPanel = tabbedPane;
         this.questionPanel = questionPanel;
+        // 初始化计时器，每隔1s更新一次
         lastTimer = new Timer(1000, event -> {
             goTestTime();
         });
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
+    // 由目前选项卡所选题目库更新Controller状态信息
+    private void init() {
         nowPanel = questionPanel.get(tabbedPanel.getSelectedIndex());
         nowQuestionList = nowPanel.getQuestionList();
         qPanels = nowPanel.getQPanels();
         var pos = nowPanel.getPosLabel().getText().split("[/]");
         nowPos = Integer.parseInt(pos[0]);
         maxPos = Integer.parseInt(pos[1]);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        init();// 由目前选项卡所选题目库更新Controller状态信息
         var source = (JComponent) e.getSource();
-        switch (source.getName()) {
+        switch (source.getName()) {// 针对不同Action处理
             case "跳转题目":
                 gotoQuestion(((JTextField) source).getText());
                 break;
@@ -69,15 +80,26 @@ public class TestController implements ActionListener {
             case "查询分数":
                 queryScore();
                 break;
+            case "注销":
+                logoutAction();
+                break;
             default:
                 JOptionPane.showMessageDialog(window, "未知操作！", "错误", JOptionPane.ERROR_MESSAGE);
                 break;
         }
+        // 更新视图
         nowPanel.getPosLabel().setText(nowPos + "/" + maxPos);
         window.validate();
         window.repaint();
     }
 
+    /**
+     * 带有{@code 连接异常处理}和{@code 弹窗消息显示}的服务器请求处理
+     * 
+     * @param request     客户端请求对象
+     * @param showMessage 是否显示操作结果弹窗
+     * @return 操作是否成功
+     */
     private boolean withErrorCatch(ClientRequest request, boolean showMessage) {
         try {
             var rs = clientSocket.query(request);
@@ -102,6 +124,13 @@ public class TestController implements ActionListener {
         return false;
     }
 
+    /**
+     * 带有{@code 连接异常处理}的服务器请求处理，返回服务器响应包
+     * 
+     * @param request     客户端请求对象
+     * @param showMessage 是否显示操作结果弹窗
+     * @return 服务器响应包
+     */
     private ServerResponse withReturnErrorCatch(ClientRequest request, boolean showMessage) {
         try {
             return clientSocket.query(request);
@@ -115,6 +144,8 @@ public class TestController implements ActionListener {
         }
         return null;
     }
+
+    // 私有方法串，处理具体Action事务
 
     private void gotoQuestion(String str) {
         if (nowPanel.getNowStateLabel().getText().equals("考试未开始")) {
@@ -229,6 +260,7 @@ public class TestController implements ActionListener {
     }
 
     private void goTestTime() {
+        // 更新剩余时间视图，如果时间到则自动交卷
         Date nowDate = new Date();
         long last = lastTime.getTime() - nowDate.getTime();
         if (last <= 0) {
@@ -250,11 +282,13 @@ public class TestController implements ActionListener {
     }
 
     private void saveScore() {
+        var request = new ClientRequest();
+        request.setRequestType(TYPE.SetScore);
+        // 考试状态设置
         nowPanel.getNowStateLabel().setText("考试结束");
         lastTimer.stop();
         nowPanel.getLastTimeLabel().setText("");
-        var request = new ClientRequest();
-        request.setRequestType(TYPE.SetScore);
+        // 成绩统计
         double sumScore = 0;
         double perScore = 100 / nowQuestionList.size();
         int correctCount = 0;
@@ -269,6 +303,7 @@ public class TestController implements ActionListener {
         } else {
             sumScore = perScore * correctCount;
         }
+        // 上传成绩
         var map = new HashMap<String, String>();
         map.put("score", String.valueOf(sumScore));
         SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -296,6 +331,7 @@ public class TestController implements ActionListener {
     }
 
     private void resetPanel() {
+        // 重置视图
         nowPanel.remove(qPanels.get(nowPos - 1));
         qPanels.clear();
         var newQPanels = new ArrayList<QuestionPanel>();
@@ -335,5 +371,11 @@ public class TestController implements ActionListener {
         } else {
             JOptionPane.showMessageDialog(window, "查询失败！\n原因：" + rs.getFailReason(), "错误", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private void logoutAction() {
+        window.getLoginFrame().setVisible(true);
+        window.dispose();
+        Thread.currentThread().interrupt();
     }
 }

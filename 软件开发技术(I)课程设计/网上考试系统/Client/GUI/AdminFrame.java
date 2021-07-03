@@ -11,6 +11,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 
+/**
+ * 管理员窗口
+ * 
+ * @since 10
+ */
 public class AdminFrame extends JFrame {
     private ClientSocket clientSocket;
     private JFrame loginFrame;
@@ -19,7 +24,7 @@ public class AdminFrame extends JFrame {
         this.clientSocket = clientSocket;
         this.loginFrame = loginFrame;
         setBounds(10, 10, 700, 400);
-        setTitle(userInfo.get("userName") + "-管理员" + " ID:" + userInfo.get("id"));
+        setTitle(userInfo.get("userName") + "-管理员" + " ID:" + userInfo.get("id"));// 标题显示用户信息
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         init();
@@ -39,15 +44,20 @@ public class AdminFrame extends JFrame {
         removeButton.setName("删除该题库");
         var addFromFileButton = new JButton("从文件中批量导入题库");
         addFromFileButton.setName("批量导入题库");
+        var logoutButton = new JButton("注销");
+        logoutButton.setName("注销");
         controlPanel.add(addButton);
         controlPanel.add(removeButton);
         controlPanel.add(addFromFileButton);
+        controlPanel.add(logoutButton);
         var tabbedPanel = new JTabbedPane();
         var panelArr = new ArrayList<AdminQuestionPanel>();
         var controller = new AdminController(this, clientSocket, tabbedPanel, panelArr);
         addButton.addActionListener(controller);
         removeButton.addActionListener(controller);
         addFromFileButton.addActionListener(controller);
+        logoutButton.addActionListener(controller);
+        // 从服务器获取题目库列表，初始化每个题目库Panel并添加到tabbedPanel中
         try {
             var list = getQuestionList();
             for (var map : list) {
@@ -62,11 +72,12 @@ public class AdminFrame extends JFrame {
             loginFrame.setVisible(true);
             this.dispose();
         }
-        this.remove(waitInform);
+        this.remove(waitInform);// 移除等待提示
         add(controlPanel, BorderLayout.NORTH);
         add(tabbedPanel, BorderLayout.CENTER);
     }
 
+    // 从服务器获取题目库列表
     private ArrayList<Map<String, String>> getQuestionList() throws IllegalStateException, IOException {
         var request = new ClientRequest();
         request.setRequestType(TYPE.GetQuestionList);

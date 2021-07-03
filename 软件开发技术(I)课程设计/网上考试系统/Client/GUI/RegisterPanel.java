@@ -34,7 +34,7 @@ public class RegisterPanel extends JPanel {
         chooseGroup.add(chooseB);
         chooseA.setSelected(true);
         var registerButton = new JButton("注册");
-        registerButton.addActionListener(event -> {
+        registerButton.addActionListener(event -> {// lambda处理注册请求
             ClientRequest request = new ClientRequest();
             request.setRequestType(Register);
             var map = new HashMap<String, String>();

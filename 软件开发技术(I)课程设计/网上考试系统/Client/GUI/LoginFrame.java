@@ -6,6 +6,11 @@ import Client.util.ClientSocket;
 
 import java.awt.*;
 
+/**
+ * 登录窗口
+ * 
+ * @since 10
+ */
 public class LoginFrame extends JFrame {
 
     public LoginFrame(ClientSocket clientSocket) {

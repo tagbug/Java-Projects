@@ -12,6 +12,11 @@ import Client.util.ClientSocket;
 import Data.ClientRequest;
 import Data.ClientRequest.TYPE;
 
+/**
+ * 考生窗口
+ * 
+ * @since 10
+ */
 public class TestFrame extends JFrame {
     private ClientSocket clientSocket;
     private JFrame loginFrame;
@@ -20,7 +25,7 @@ public class TestFrame extends JFrame {
         this.clientSocket = clientSocket;
         this.loginFrame = loginFrame;
         setBounds(10, 10, 700, 400);
-        setTitle(userInfo.get("userName") + "-考生" + " ID:" + userInfo.get("id"));
+        setTitle(userInfo.get("userName") + "-考生" + " ID:" + userInfo.get("id"));// 标题显示用户信息
         setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         init();
@@ -29,22 +34,23 @@ public class TestFrame extends JFrame {
     }
 
     void init() {
-        var waitInform = new JLabel("加载题目库中，请等待...");
-        waitInform.setFont(new Font("宋体", Font.BOLD, 16));
-        add(waitInform, BorderLayout.CENTER);
-        setVisible(true);
         var controlPanel = new JPanel();
         var startButton = new JButton("开始该题库训练");
         startButton.setName("开始考试");
         var queryScoreButton = new JButton("查询历史分数");
         queryScoreButton.setName("查询分数");
+        var logoutButton = new JButton("注销");
+        logoutButton.setName("注销");
         controlPanel.add(startButton);
         controlPanel.add(queryScoreButton);
+        controlPanel.add(logoutButton);
         var tabbedPanel = new JTabbedPane();
         var panelArr = new ArrayList<TestQuestionPanel>();
         var controller = new TestController(this, clientSocket, tabbedPanel, panelArr);
         startButton.addActionListener(controller);
         queryScoreButton.addActionListener(controller);
+        logoutButton.addActionListener(controller);
+        // 从服务器获取题目库列表，初始化每个题目库Panel并添加到tabbedPanel中
         try {
             var list = getQuestionList();
             for (var map : list) {
@@ -60,11 +66,11 @@ public class TestFrame extends JFrame {
             loginFrame.setVisible(true);
             this.dispose();
         }
-        this.remove(waitInform);
         add(controlPanel, BorderLayout.NORTH);
         add(tabbedPanel, BorderLayout.CENTER);
     }
 
+    // 从服务器获取题目库列表
     private ArrayList<Map<String, String>> getQuestionList() throws IllegalStateException, IOException {
         var request = new ClientRequest();
         request.setRequestType(TYPE.GetQuestionList);

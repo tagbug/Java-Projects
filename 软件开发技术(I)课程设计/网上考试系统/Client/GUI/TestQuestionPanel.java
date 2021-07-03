@@ -8,6 +8,11 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 
+/**
+ * 考生的题目库Panel
+ * 
+ * @since 10
+ */
 public class TestQuestionPanel extends JPanel {
     private int questionTableId;
     private ArrayList<Map<String, String>> questionList;
@@ -25,8 +30,9 @@ public class TestQuestionPanel extends JPanel {
     }
 
     void init(ActionListener listener, String questionTableName) throws IllegalStateException, IOException {
+        // 视图布局处理
         qPanels = new ArrayList<QuestionPanel>();
-        qPanels.add(new QuestionPanel("<这里会显示题目信息，右边显示题目图片，在下方选择答案>", "", ""));
+        qPanels.add(new QuestionPanel("<这里会显示题目信息，右边显示题目图片，在下方选择答案>", "", ""));// 默认提示信息
         add(qPanels.get(0), BorderLayout.CENTER);
         var headPanel = new JPanel();
         headPanel.add(new JLabel("【" + questionTableName + "】"));
@@ -60,6 +66,7 @@ public class TestQuestionPanel extends JPanel {
         add(controlPanel, BorderLayout.SOUTH);
     }
 
+    // Getters
     public ArrayList<Map<String, String>> getQuestionList() {
         return questionList;
     }

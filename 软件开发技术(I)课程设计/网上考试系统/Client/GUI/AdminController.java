@@ -24,18 +24,23 @@ import Client.util.ClientSocket;
 import Data.ClientRequest;
 import Data.ClientRequest.TYPE;
 
+/**
+ * 管理员窗口Controller
+ * 
+ * @since 10
+ */
 public class AdminController implements ActionListener {
     private ClientSocket clientSocket;
     private ArrayList<AdminQuestionPanel> questionPanel;// 试题库页面容器
+    private AdminQuestionPanel nowPanel;// 目前的题目库容器
     private ArrayList<QuestionPanel> qPanels;// 题目容器
-    private JTabbedPane tabbedPanel;
-    private AdminFrame window;
-    private AdminQuestionPanel nowPanel;
-    private ArrayList<Map<String, String>> nowQuestionList;
-    private int nowPos;
-    private int maxPos;
-    private boolean canRevoke;
-    private HashSet<String> removedQuestionId;
+    private JTabbedPane tabbedPanel;// 选项卡Panel
+    private AdminFrame window;// 管理员窗口
+    private ArrayList<Map<String, String>> nowQuestionList;// 目前的题目信息数组
+    private int nowPos;// 目前题目的位置
+    private int maxPos;// 最大题目位置
+    private boolean canRevoke;// 现在是否可以撤销操作
+    private HashSet<String> removedQuestionId;// 移除的题目ID
 
     AdminController(AdminFrame window, ClientSocket clientSocket, JTabbedPane tabbedPane,
             ArrayList<AdminQuestionPanel> questionPanel) {
@@ -46,6 +51,7 @@ public class AdminController implements ActionListener {
         removedQuestionId = new HashSet<String>();
     }
 
+    // 由目前选项卡所选题目库更新Controller状态信息
     private void init() {
         nowPanel = questionPanel.get(tabbedPanel.getSelectedIndex());
         nowQuestionList = nowPanel.getQuestionList();
@@ -57,9 +63,9 @@ public class AdminController implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        init();
+        init();// 由目前选项卡所选题目库更新Controller状态信息
         var source = (JComponent) e.getSource();
-        switch (source.getName()) {
+        switch (source.getName()) {// 针对不同Action处理
             case "增加新题库":
                 addNewQuestionList();
                 break;
@@ -93,10 +99,14 @@ public class AdminController implements ActionListener {
             case "撤销操作":
                 revokeAction();
                 break;
+            case "注销":
+                logoutAction();
+                break;
             default:
                 JOptionPane.showMessageDialog(window, "未知操作！", "错误", JOptionPane.ERROR_MESSAGE);
                 break;
         }
+        // 更新视图
         nowPanel.getPosLabel().setText(nowPos + "/" + maxPos);
         if (canRevoke) {
             nowPanel.getRevokeButton().setEnabled(true);
@@ -105,6 +115,13 @@ public class AdminController implements ActionListener {
         window.repaint();
     }
 
+    /**
+     * 带有{@code 连接异常处理}和{@code 弹窗消息显示}的服务器请求处理
+     * 
+     * @param request     客户端请求对象
+     * @param showMessage 是否显示操作结果弹窗
+     * @return 操作是否成功
+     */
     private boolean withErrorCatch(ClientRequest request, boolean showMessage) {
         try {
             var rs = clientSocket.query(request);
@@ -129,6 +146,11 @@ public class AdminController implements ActionListener {
         return false;
     }
 
+    /**
+     * 执行一个Callable并带有{@code 连接异常处理}
+     * 
+     * @param c Callable对象
+     */
     private void updateWithErrorCatch(Callable<Void> c) {
         try {
             c.call();
@@ -141,6 +163,8 @@ public class AdminController implements ActionListener {
             Thread.currentThread().interrupt();
         }
     }
+
+    // 私有方法串，处理具体Action事务
 
     private void addNewQuestionList() {
         var name = JOptionPane.showInputDialog(window, "请输入题库名", "提示", JOptionPane.INFORMATION_MESSAGE);
@@ -303,6 +327,7 @@ public class AdminController implements ActionListener {
     }
 
     private void saveAction() {
+        // 将用户操作结果保存到新List中
         var newQuestionList = new ArrayList<Map<String, String>>();
         for (var e : qPanels) {
             var oriStr = e.getText();
@@ -317,9 +342,11 @@ public class AdminController implements ActionListener {
             map.put("imgSrc", e.getImgSrc());
             newQuestionList.add(map);
         }
+        // 提交用户操作到服务器
         int succeedCount = 0;
         int failedCount = 0;
         for (var e : nowQuestionList) {
+            // 提交新建题目操作
             if (e.get("text").isEmpty()) {
                 var map = new HashMap<String, String>();
                 map.put("questionTableId", String.valueOf(nowPanel.getQuestionTableId()));
@@ -336,6 +363,7 @@ public class AdminController implements ActionListener {
         String[] fields = new String[] { "text", "imgSrc", "chooseA", "chooseB", "chooseC", "chooseD", "answer" };
         for (int i = 0; i < nowQuestionList.size(); i++) {
             for (var f : fields) {
+                // 提交更新题目操作
                 int compare = nowQuestionList.get(i).get(f).compareTo(newQuestionList.get(i).get(f));
                 if (compare != 0) {
                     var map = newQuestionList.get(i);
@@ -354,6 +382,7 @@ public class AdminController implements ActionListener {
             }
         }
         for (var e : removedQuestionId) {
+            // 提交移除题目操作
             var map = new HashMap<String, String>();
             map.put("questionTableId", String.valueOf(nowPanel.getQuestionTableId()));
             map.put("id", String.valueOf(e));
@@ -367,6 +396,7 @@ public class AdminController implements ActionListener {
             }
         }
         if (!removedQuestionId.isEmpty()) {
+            // 如果移除了题目，则需要再对数据库的ID主键进行刷新操作
             removedQuestionId.clear();
             var map = new HashMap<String, String>();
             map.put("questionTableId", String.valueOf(nowPanel.getQuestionTableId()));
@@ -379,6 +409,7 @@ public class AdminController implements ActionListener {
                 failedCount += 1;
             }
         }
+        // 弹窗显示处理结果
         if (failedCount == 0) {
             JOptionPane.showMessageDialog(window, "保存成功！\n成功数：" + succeedCount + "\n失败数：" + failedCount, "提示",
                     JOptionPane.INFORMATION_MESSAGE);
@@ -392,6 +423,12 @@ public class AdminController implements ActionListener {
             }
         }
         refreshAction();
+    }
+
+    private void logoutAction() {
+        window.getLoginFrame().setVisible(true);
+        window.dispose();
+        Thread.currentThread().interrupt();
     }
 
     private void refreshAction() {
@@ -465,7 +502,7 @@ public class AdminController implements ActionListener {
                     nowQuestionId = Integer.parseInt(list.get(list.size() - 1).get("id")) + 1;
                 }
             }
-            // 循环录入
+            // 循环录入缓存
             while (reader.hasNextLine()) {
                 var sb = new StringBuilder();
                 try {
@@ -493,10 +530,11 @@ public class AdminController implements ActionListener {
                     throw e1;
                 }
             }
+            // 录入本地题库
             boolean flag = false;
             for (int i = 0; i < tabbedPanel.getTabCount(); i++) {
                 if (tabbedPanel.getTitleAt(i).equals(questionTableName)) {
-                    // 存在题库，添加到现有题库中
+                    // 存在对应题库，添加到现有题库中
                     flag = true;
                     tabbedPanel.setSelectedIndex(i);
                     init();
@@ -505,7 +543,7 @@ public class AdminController implements ActionListener {
                 }
             }
             if (!flag) {
-                // 不存在题库，
+                // 不存在对应题库，新建
                 var request = new ClientRequest();
                 request.setRequestType(TYPE.AddQuestionList);
                 var map = new HashMap<String, String>();
@@ -569,7 +607,7 @@ public class AdminController implements ActionListener {
      * 将用户输入转换成标准题目格式
      * 
      * @param str
-     * @return
+     * @return 题目Map(text+chooseA/B/C/D)
      * @throws Exception 用户输入异常
      */
     private Map<String, String> questionStrParser(String str) throws Exception {

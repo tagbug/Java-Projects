@@ -5,13 +5,18 @@ import java.net.URL;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * 题目容器，管理员和考生共用的基础容器
+ * 
+ * @since 10
+ */
 public class QuestionPanel extends JPanel {
-    private JTextArea textArea;
-    private JLabel imgArea;
-    private JPanel inPanel;
     private static final String[] chooseStr = new String[] { "A", "B", "C", "D" };
-    private JRadioButton[] chooses;
-    private String imgSrc;
+    private JPanel inPanel;
+    private JTextArea textArea;// 题目文本容器
+    private JLabel imgArea;// 题目图片容器
+    private JRadioButton[] chooses;// 单选按钮
+    private String imgSrc;// 题目图片URL地址
 
     QuestionPanel(String questionText, String imgSrc, String answer) {
         this.imgSrc = imgSrc;
@@ -22,12 +27,14 @@ public class QuestionPanel extends JPanel {
     void init(String questionText, String answer) {
         inPanel = new JPanel();
         inPanel.setLayout(new GridLayout(1, 2));
+        // 题目文本处理
         textArea = new JTextArea(questionText);
         textArea.setFont(new Font("宋体", Font.BOLD, 17));
         textArea.setLineWrap(true);
+        // 题目图片处理
         if (imgSrc == null || imgSrc.isEmpty()) {
             imgArea = new JLabel("此题无图");
-            imgArea.setFont(new Font("宋体", Font.BOLD, 30));
+            imgArea.setFont(new Font("微软雅黑", Font.BOLD, 30));
         } else {
             try {
                 var img = new ImageIcon(new URL(imgSrc));
@@ -35,12 +42,13 @@ public class QuestionPanel extends JPanel {
                 imgArea = new JLabel(img);
             } catch (Exception e) {
                 imgArea = new JLabel("此题图片损坏");
-                imgArea.setFont(new Font("宋体", Font.BOLD, 30));
+                imgArea.setFont(new Font("微软雅黑", Font.BOLD, 30));
             }
         }
         inPanel.add(new JScrollPane(textArea), BorderLayout.WEST);
         inPanel.add(imgArea, BorderLayout.EAST);
         add(inPanel, BorderLayout.CENTER);
+        // 选择项处理
         var choosePanel = new JPanel();
         var group = new ButtonGroup();
         chooses = new JRadioButton[4];

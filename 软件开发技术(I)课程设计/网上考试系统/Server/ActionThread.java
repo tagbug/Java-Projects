@@ -24,6 +24,12 @@ public class ActionThread implements Runnable {
     private boolean isAdmin = false;
     private int userId;
 
+    /**
+     * 默认构造方法
+     * 
+     * @param socket   独立socket连接
+     * @param dbBridge 数据库桥
+     */
     public ActionThread(Socket socket, DbBridge dbBridge) {
         this.socket = socket;
         this.dbBridge = dbBridge;
@@ -36,11 +42,11 @@ public class ActionThread implements Runnable {
         try (var inputStream = new ObjectInputStream(socket.getInputStream());
                 var outputStream = new ObjectOutputStream(socket.getOutputStream())) {
             while (true) {
-                var request = (ClientRequest) inputStream.readObject();
-                var data = request.getData();
+                var request = (ClientRequest) inputStream.readObject();// 读取客户端请求
+                var data = request.getData();// 请求数据
                 var response = new ServerResponse();
                 try {
-                    switch (request.getRequestType()) {
+                    switch (request.getRequestType()) {// 针对不同请求类型
                         case Register:
                             register(data, response);
                             break;
@@ -100,7 +106,7 @@ public class ActionThread implements Runnable {
                     e.printStackTrace();
                     response.setFailReason("错误请求！");
                 } finally {
-                    outputStream.writeObject(response);
+                    outputStream.writeObject(response);// 回应客户端
                 }
             }
         } catch (Exception e) {// 其他未知错误
@@ -109,6 +115,7 @@ public class ActionThread implements Runnable {
         }
     }
 
+    // 私有方法串，处理具体的客户端请求
     private void register(Map<String, String> data, ServerResponse response) throws DbException, SQLException {
         if (dbBridge.register(data.get("name"), data.get("password"), Boolean.parseBoolean(data.get("isAdmin")))) {
             response.setSucceed(true);

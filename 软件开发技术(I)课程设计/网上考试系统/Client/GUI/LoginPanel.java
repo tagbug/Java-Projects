@@ -9,7 +9,7 @@ import javax.swing.*;
 
 import Client.util.ClientSocket;
 import Data.ClientRequest;
-import static Data.ClientRequest.TYPE.*;
+import static Data.ClientRequest.TYPE.*;// 静态导入TYPE(enum)
 
 /**
  * 登录界面视图
@@ -18,7 +18,7 @@ import static Data.ClientRequest.TYPE.*;
  */
 public class LoginPanel extends JPanel {
     private ClientSocket clientSocket;
-    private JFrame window;
+    private JFrame window;// 登录窗口对象
 
     LoginPanel(ClientSocket clientSocket, JFrame window) {
         this.clientSocket = clientSocket;
@@ -31,7 +31,7 @@ public class LoginPanel extends JPanel {
         var idText = new JTextField(10);
         var pasText = new JTextField(10);
         var loginButton = new JButton("登录");
-        loginButton.addActionListener(event -> {
+        loginButton.addActionListener(event -> {// lambda处理登录请求
             ClientRequest request = new ClientRequest();
             request.setRequestType(Login);
             var map = new HashMap<String, String>();
@@ -45,11 +45,11 @@ public class LoginPanel extends JPanel {
                     var isAdmin = Boolean.parseBoolean(userInfo.get("isAdmin"));
                     if (isAdmin) {
                         EventQueue.invokeLater(() -> {
-                            new AdminFrame(clientSocket, window, userInfo);
+                            new AdminFrame(clientSocket, window, userInfo);// 管理员窗口
                         });
                     } else {
                         EventQueue.invokeLater(() -> {
-                            new TestFrame(clientSocket, window, userInfo);
+                            new TestFrame(clientSocket, window, userInfo);// 考生窗口
                         });
                     }
                     window.setVisible(false);

@@ -19,11 +19,12 @@ import Server.excepitons.DbException;
  * @since 10
  */
 public class DbBridge {
+    // JDBC&MySQL配置
     private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
     private static final String DB_URL = "jdbc:mysql://localhost:3306/TestSystem?useSSL=false";// 不使用SSL连接
     private static final String USER_NAME = "root";
     private static final String USER_PASSWORD = null;
-
+    // SQL查询语句
     private static final String REGISTER_QUERY = "INSERT INTO users VALUES(?,?,?,?)";
     private static final String LOGIN_QUERY = "SELECT * FROM users WHERE name=? AND password=?";
     private static final String USER_QUERY = "SELECT * FROM users WHERE id=?";
@@ -41,7 +42,7 @@ public class DbBridge {
     private static final String DELETE_QUESTION_QUERY = "DELETE FROM questions_%s WHERE id=?";
     private static final String UPDATE_QUESTION_QUERY = "UPDATE questions_%s SET text=?,imgSrc=?,chooseA=?,chooseB=?,chooseC=?,chooseD=?,answer=? WHERE id=?";
     private static final String MAX_ID_QUERY = "SELECT MAX(id) FROM ";
-
+    // 数据库连接对象
     private Connection conn;
 
     /**
@@ -156,9 +157,9 @@ public class DbBridge {
     /**
      * 刷新主键自增序列
      * 
-     * @param tableName
-     * @throws DbException
-     * @throws SQLException
+     * @param tableName 表名
+     * @throws DbException  字段为空
+     * @throws SQLException 数据库异常
      */
     public void refreshID(String tableName) throws DbException, SQLException {
         if (tableName == null || tableName.isEmpty())
@@ -311,7 +312,7 @@ public class DbBridge {
 
     /**
      * 根据题库题目总数随机获取n个题目 max<=10时，获取max道题目 10<max<=20时，获取10~max道题目
-     * max>20时，获取2/max~MAX_COUNT道题目，但不超过MAX_COUNT道题
+     * max>20时，获取max/2~MAX_COUNT道题目，但不超过MAX_COUNT道题
      * 
      * @return 题目信息数组
      * @throws DbException  内部异常--逻辑错误/未知错误
@@ -331,6 +332,7 @@ public class DbBridge {
                 if (max / 2 > MAX_COUNT) {
                     n = MAX_COUNT;
                 } else {
+                    // max/2~MAX_COUNT
                     n = tmpRandom.nextInt(MAX_COUNT - max / 2 + 1) + max / 2;
                 }
             }
@@ -369,6 +371,14 @@ public class DbBridge {
         }
     }
 
+    /**
+     * 获取所有题目
+     * 
+     * @param questionTableId 题目库表ID
+     * @return 题库
+     * @throws SQLException 数据库异常
+     * @throws DbException  内部异常（代码错误）
+     */
     public ArrayList<Map<String, String>> getAllQuestions(int questionTableId) throws SQLException, DbException {
         try {
             int max = getMaxID("questions_" + questionTableId);

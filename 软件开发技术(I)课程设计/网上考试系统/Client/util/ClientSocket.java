@@ -42,8 +42,8 @@ public class ClientSocket {
     /**
      * 通过Socket与服务器建立连接，同时初始化Object流，用以传输对象数据
      * 
-     * @throws UnknownHostException
-     * @throws IOException
+     * @throws UnknownHostException  域名解析失败
+     * @throws IOException           连接失败
      * @throws IllegalStateException 当尝试建立重复连接时抛出
      */
     public void connect() throws UnknownHostException, IOException, IllegalStateException {
@@ -64,8 +64,8 @@ public class ClientSocket {
     /**
      * 强制与服务器建立连接，当通道意外坍塌无法检测时使用
      * 
-     * @throws UnknownHostException
-     * @throws IOException
+     * @throws UnknownHostException 域名解析失败
+     * @throws IOException          连接失败
      */
     public void enforceConnect() throws UnknownHostException, IOException {
         socket = new Socket(host, port);
@@ -86,7 +86,7 @@ public class ClientSocket {
      * @param queryRequest 封装的查询请求对象
      * @return 服务器返回的处理结果
      * @throws IllegalStateException 当{@code 未与服务器建立连接}或者{@code 处理返回结果时内部代码错误}时抛出
-     * @throws IOException
+     * @throws IOException           连接异常
      */
     public synchronized ServerResponse query(ClientRequest queryRequest) throws IllegalStateException, IOException {
         if (socket == null)
