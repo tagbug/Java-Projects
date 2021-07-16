@@ -1,166 +1,51 @@
-package Client.GUI;
+package Client.GUI.Controller;
 
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
-import java.util.concurrent.Callable;
+import Client.GUI.Frame.*;
+import Client.GUI.Panel.*;
+import Data.*;
+import Data.ClientRequest.*;
 
-import javax.swing.JComponent;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
-import javax.swing.filechooser.FileNameExtensionFilter;
-
-import Client.util.ClientSocket;
-import Data.ClientRequest;
-import Data.ClientRequest.TYPE;
+import javax.swing.*;
+import javax.swing.filechooser.*;
+import java.awt.*;
+import java.io.*;
+import java.util.*;
 
 /**
  * 管理员窗口Controller
- * 
+ *
  * @since 10
  */
-public class AdminController implements ActionListener {
-    private ClientSocket clientSocket;
-    private ArrayList<AdminQuestionPanel> questionPanel;// 试题库页面容器
-    private AdminQuestionPanel nowPanel;// 目前的题目库容器
-    private ArrayList<QuestionPanel> qPanels;// 题目容器
-    private JTabbedPane tabbedPanel;// 选项卡Panel
-    private AdminFrame window;// 管理员窗口
-    private ArrayList<Map<String, String>> nowQuestionList;// 目前的题目信息数组
-    private int nowPos;// 目前题目的位置
-    private int maxPos;// 最大题目位置
+public class AdminController extends UserController<AdminQuestionPanel> {
     private boolean canRevoke;// 现在是否可以撤销操作
-    private HashSet<String> removedQuestionId;// 移除的题目ID
+    private final HashSet<String> removedQuestionId;// 移除的题目ID
 
-    AdminController(AdminFrame window, ClientSocket clientSocket, JTabbedPane tabbedPane,
-            ArrayList<AdminQuestionPanel> questionPanel) {
-        this.window = window;
-        this.clientSocket = clientSocket;
-        this.tabbedPanel = tabbedPane;
-        this.questionPanel = questionPanel;
-        removedQuestionId = new HashSet<String>();
-    }
-
-    // 由目前选项卡所选题目库更新Controller状态信息
-    private void init() {
-        nowPanel = questionPanel.get(tabbedPanel.getSelectedIndex());
-        nowQuestionList = nowPanel.getQuestionList();
-        qPanels = nowPanel.getQPanels();
-        var pos = nowPanel.getPosLabel().getText().split("[/]");
-        nowPos = Integer.parseInt(pos[0]);
-        maxPos = Integer.parseInt(pos[1]);
+    public AdminController(AdminFrame window, JTabbedPane tabbedPane, ArrayList<AdminQuestionPanel> questionPanel) {
+        super(window, tabbedPane, questionPanel);
+        removedQuestionId = new HashSet<>();
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-        init();// 由目前选项卡所选题目库更新Controller状态信息
-        var source = (JComponent) e.getSource();
-        switch (source.getName()) {// 针对不同Action处理
-            case "增加新题库":
-                addNewQuestionList();
-                break;
-            case "删除该题库":
-                deleteQuestionList();
-                break;
-            case "批量导入题库":
-                readFromFile();
-                break;
-            case "跳转题目":
-                gotoQuestion(((JTextField) source).getText());
-                break;
-            case "上一题目":
-                preQuestion();
-                break;
-            case "下一题目":
-                nextQuestion();
-                break;
-            case "修改题目图片":
-                changeQuestionImg();
-                break;
-            case "新建题目":
-                addNewQuestion();
-                break;
-            case "删除题目":
-                deleteQuestion();
-                break;
-            case "保存操作":
-                saveAction();
-                break;
-            case "撤销操作":
-                revokeAction();
-                break;
-            case "注销":
-                logoutAction();
-                break;
-            default:
-                JOptionPane.showMessageDialog(window, "未知操作！", "错误", JOptionPane.ERROR_MESSAGE);
-                break;
+    void handleAction(JComponent source) {
+        // 针对不同Action处理
+        switch (source.getName()) {
+            case "增加新题库" -> addNewQuestionList();
+            case "删除该题库" -> deleteQuestionList();
+            case "批量导入题库" -> readFromFile();
+            case "跳转题目" -> gotoQuestion(((JTextField) source).getText());
+            case "上一题目" -> preQuestion();
+            case "下一题目" -> nextQuestion();
+            case "修改题目图片" -> changeQuestionImg();
+            case "新建题目" -> addNewQuestion();
+            case "删除题目" -> deleteQuestion();
+            case "保存操作" -> saveAction();
+            case "撤销操作" -> revokeAction(false);
+            case "注销" -> logoutAction();
+            default -> JOptionPane.showMessageDialog(window, "未知操作！", "错误", JOptionPane.ERROR_MESSAGE);
         }
         // 更新视图
-        nowPanel.getPosLabel().setText(nowPos + "/" + maxPos);
         if (canRevoke) {
             nowPanel.getRevokeButton().setEnabled(true);
-        }
-        window.validate();
-        window.repaint();
-    }
-
-    /**
-     * 带有{@code 连接异常处理}和{@code 弹窗消息显示}的服务器请求处理
-     * 
-     * @param request     客户端请求对象
-     * @param showMessage 是否显示操作结果弹窗
-     * @return 操作是否成功
-     */
-    private boolean withErrorCatch(ClientRequest request, boolean showMessage) {
-        try {
-            var rs = clientSocket.query(request);
-            if (rs.isSucceed()) {
-                if (showMessage)
-                    JOptionPane.showMessageDialog(window, "操作成功！", "提示", JOptionPane.INFORMATION_MESSAGE);
-                return true;
-            } else {
-                if (showMessage)
-                    JOptionPane.showMessageDialog(window, "操作失败！\n原因：" + rs.getFailReason(), "错误",
-                            JOptionPane.ERROR_MESSAGE);
-                return false;
-            }
-        } catch (IllegalStateException | IOException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(window, "连接异常！即将退回登陆页面...\n原因：" + e.getMessage(), "错误",
-                    JOptionPane.ERROR_MESSAGE);
-            window.getLoginFrame().setVisible(true);
-            window.dispose();
-            Thread.currentThread().interrupt();
-        }
-        return false;
-    }
-
-    /**
-     * 执行一个Callable并带有{@code 连接异常处理}
-     * 
-     * @param c Callable对象
-     */
-    private void updateWithErrorCatch(Callable<Void> c) {
-        try {
-            c.call();
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(window, "连接异常！即将退回登陆页面...\n原因：" + e.getMessage(), "错误",
-                    JOptionPane.ERROR_MESSAGE);
-            window.getLoginFrame().setVisible(true);
-            window.dispose();
-            Thread.currentThread().interrupt();
         }
     }
 
@@ -179,11 +64,10 @@ public class AdminController implements ActionListener {
         if (withErrorCatch(request, true)) {
             // 操作成功，更新视图
             updateWithErrorCatch(() -> {
-                var qPanel = new AdminQuestionPanel(clientSocket,
+                var qPanel = new AdminQuestionPanel(
                         questionPanel.get(questionPanel.size() - 1).getQuestionTableId() + 1, this);
                 questionPanel.add(qPanel);
                 tabbedPanel.add(name, qPanel);
-                return null;
             });
         }
     }
@@ -202,14 +86,13 @@ public class AdminController implements ActionListener {
                 updateWithErrorCatch(() -> {
                     questionPanel.remove(tabbedPanel.getSelectedIndex());
                     tabbedPanel.remove(tabbedPanel.getSelectedIndex());
-                    return null;
                 });
             }
         }
     }
 
     private void gotoQuestion(String str) {
-        int target = 0;
+        int target;
         try {
             target = Integer.parseInt(str);
         } catch (NumberFormatException e) {
@@ -218,7 +101,6 @@ public class AdminController implements ActionListener {
         }
         if (target < 1 || target > maxPos) {
             JOptionPane.showMessageDialog(window, "请输入有效数值！", "错误", JOptionPane.ERROR_MESSAGE);
-            return;
         } else {
             nowPanel.remove(qPanels.get(nowPos - 1));
             nowPanel.add(qPanels.get(target - 1), BorderLayout.CENTER);
@@ -230,7 +112,6 @@ public class AdminController implements ActionListener {
         int target = nowPos - 1;
         if (target < 1) {
             JOptionPane.showMessageDialog(window, "已经到头了..", "提示", JOptionPane.INFORMATION_MESSAGE);
-            return;
         } else {
             nowPanel.remove(qPanels.get(nowPos - 1));
             nowPanel.add(qPanels.get(target - 1));
@@ -242,7 +123,6 @@ public class AdminController implements ActionListener {
         int target = nowPos + 1;
         if (target > maxPos) {
             JOptionPane.showMessageDialog(window, "已经到末尾了..", "提示", JOptionPane.INFORMATION_MESSAGE);
-            return;
         } else {
             nowPanel.remove(qPanels.get(nowPos - 1));
             nowPanel.add(qPanels.get(target - 1));
@@ -267,8 +147,13 @@ public class AdminController implements ActionListener {
         qPanels.add(newQuestion);
         maxPos += 1;
         var map = new HashMap<String, String>();
-        var nId = nowQuestionList.get(nowQuestionList.size() - 1).get("id");
-        removedQuestionId.remove(nId);
+        String nId;
+        if (nowQuestionList.isEmpty()) {
+            nId = "1";
+        } else {
+            nId = nowQuestionList.get(nowQuestionList.size() - 1).get("id");
+            removedQuestionId.remove(nId);
+        }
         map.put("id", String.valueOf(Integer.parseInt(nId) + 1));
         map.put("text", "");
         map.put("imgSrc", "");
@@ -292,38 +177,38 @@ public class AdminController implements ActionListener {
             addNewQuestion();
         } else {
             if (nowPos > maxPos)
-                nowPos -= 1;
+                nowPos = maxPos;
             nowPanel.add(qPanels.get(nowPos - 1), BorderLayout.CENTER);
         }
         canRevoke = true;
     }
 
-    private void revokeAction() {
-        nowPanel.remove(qPanels.get(nowPos - 1));
-        qPanels.clear();
-        for (int i = 0; i < nowQuestionList.size(); i++) {
-            var map = nowQuestionList.get(i);
-            var sb = new StringBuilder();
-            sb.append(map.get("text"));
-            sb.append("\nA. ");
-            sb.append(map.get("chooseA"));
-            sb.append("\nB. ");
-            sb.append(map.get("chooseB"));
-            sb.append("\nC. ");
-            sb.append(map.get("chooseC"));
-            sb.append("\nD. ");
-            sb.append(map.get("chooseD"));
-            qPanels.add(new QuestionPanel(sb.toString(), map.get("imgSrc"), map.get("answer")));
+    private void revokeAction(boolean getFromCache) {
+        try {
+            nowPanel.remove(qPanels.get(nowPos - 1));
+            qPanels.clear();
+            if (!getFromCache) {
+                nowQuestionList.clear();
+                nowQuestionList.addAll(getAllQuestions(nowPanel.questionTableId));
+            }
+            nowPanel.addQuestionsToPanels(nowQuestionList, qPanels, null, true);
+            maxPos = qPanels.size();
+            if (qPanels.size() == 0)
+                qPanels.add(new QuestionPanel("<请在这里写入题目信息，在下面更改选项答案>", "", "A"));
+            if (nowPos > maxPos)
+                nowPos = maxPos;
+            nowPanel.add(qPanels.get(nowPos - 1), BorderLayout.CENTER);
+            nowPanel.getRevokeButton().setEnabled(false);
+            removedQuestionId.clear();
+            canRevoke = false;
+        } catch (IllegalStateException | IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(window, "连接异常！即将退回登陆页面...\n原因：" + e.getMessage(), "错误",
+                    JOptionPane.ERROR_MESSAGE);
+            window.getLoginFrame().setVisible(true);
+            window.dispose();
+            Thread.currentThread().interrupt();
         }
-        maxPos = qPanels.size();
-        if (qPanels.size() == 0)
-            qPanels.add(new QuestionPanel("<请在这里写入题目信息，在下面更改选项答案>", "", "A"));
-        if (nowPos > maxPos)
-            nowPos -= 1;
-        nowPanel.add(qPanels.get(nowPos - 1), BorderLayout.CENTER);
-        nowPanel.getRevokeButton().setEnabled(false);
-        removedQuestionId.clear();
-        canRevoke = false;
     }
 
     private void saveAction() {
@@ -348,19 +233,14 @@ public class AdminController implements ActionListener {
         for (var e : nowQuestionList) {
             // 提交新建题目操作
             if (e.get("text").isEmpty()) {
-                var map = new HashMap<String, String>();
-                map.put("questionTableId", String.valueOf(nowPanel.getQuestionTableId()));
-                var request = new ClientRequest();
-                request.setRequestType(TYPE.SetQuestion);
-                request.setData(map);
-                if (withErrorCatch(request, false)) {
+                if (setQuestionToServer()) {
                     succeedCount += 1;
                 } else {
                     failedCount += 1;
                 }
             }
         }
-        String[] fields = new String[] { "text", "imgSrc", "chooseA", "chooseB", "chooseC", "chooseD", "answer" };
+        String[] fields = new String[]{"text", "imgSrc", "chooseA", "chooseB", "chooseC", "chooseD", "answer"};
         for (int i = 0; i < nowQuestionList.size(); i++) {
             for (var f : fields) {
                 // 提交更新题目操作
@@ -368,11 +248,7 @@ public class AdminController implements ActionListener {
                 if (compare != 0) {
                     var map = newQuestionList.get(i);
                     map.put("id", nowQuestionList.get(i).get("id"));
-                    map.put("questionTableId", String.valueOf(nowPanel.getQuestionTableId()));
-                    var request = new ClientRequest();
-                    request.setRequestType(TYPE.UpdateQuestion);
-                    request.setData(map);
-                    if (withErrorCatch(request, false)) {
+                    if (updateQuestionToServer(map)) {
                         succeedCount += 1;
                     } else {
                         failedCount += 1;
@@ -433,52 +309,36 @@ public class AdminController implements ActionListener {
 
     private void refreshAction() {
         updateWithErrorCatch(() -> {
-            var newList = nowPanel.getAllQuestions();
+            var newList = getAllQuestions(nowPanel.questionTableId);
             nowQuestionList.clear();
             nowQuestionList.addAll(newList);
             var newPanels = new ArrayList<QuestionPanel>();
-            for (int i = 0; i < newList.size(); i++) {
-                var map = newList.get(i);
-                var sb = new StringBuilder();
-                sb.append(map.get("text"));
-                sb.append("\nA. ");
-                sb.append(map.get("chooseA"));
-                sb.append("\nB. ");
-                sb.append(map.get("chooseB"));
-                sb.append("\nC. ");
-                sb.append(map.get("chooseC"));
-                sb.append("\nD. ");
-                sb.append(map.get("chooseD"));
-                newPanels.add(new QuestionPanel(sb.toString(), map.get("imgSrc"), map.get("answer")));
-            }
-            if (newPanels.size() == 0)
-                newPanels.add(new QuestionPanel("<请在这里写入题目信息，在下面更改选项答案>", "", "A"));
+            nowPanel.addQuestionsToPanels(newList, newPanels, null, true);
             nowPanel.remove(qPanels.get(nowPos - 1));
             qPanels.clear();
             qPanels.addAll(newPanels);
             nowPos = 1;
             maxPos = qPanels.size();
             nowPanel.add(qPanels.get(0), BorderLayout.CENTER);
-            return null;
         });
     }
 
     /**
      * 从文本文件中批量导入题库 格式要求：（注意一个文件只能有一个题库）
      * <p>
-     * 
+     *
      * <pre>
      * 题库名字
-     * 
+     *
      * 问题描述文本
      * A. 选项A文本
      * B. 选项B文本
      * C. 选项C文本
      * D. 选项D文本
-     * 
+     *
      * NULL（图片地址，没有就是null）
      * B（本题答案）
-     * 
+     *
      * 问题描述文本
      * A. 选项A文本
      * ........
@@ -491,7 +351,7 @@ public class AdminController implements ActionListener {
         if (choose != JFileChooser.APPROVE_OPTION)
             return;
         File file = chooser.getSelectedFile();
-        try (var reader = new Scanner(file);) {
+        try (var reader = new Scanner(file)) {
             String questionTableName = reader.nextLine();
             var questions = new ArrayList<Map<String, String>>();
             // 确定新题目的ID从哪里开始
@@ -499,7 +359,9 @@ public class AdminController implements ActionListener {
             for (int i = 0; i < tabbedPanel.getTabCount(); i++) {
                 if (tabbedPanel.getTitleAt(i).equals(questionTableName)) {
                     var list = questionPanel.get(i).getQuestionList();
-                    nowQuestionId = Integer.parseInt(list.get(list.size() - 1).get("id")) + 1;
+                    if (!list.isEmpty()) {
+                        nowQuestionId = Integer.parseInt(list.get(list.size() - 1).get("id")) + 1;
+                    }
                 }
             }
             // 循环录入缓存
@@ -539,7 +401,7 @@ public class AdminController implements ActionListener {
                     tabbedPanel.setSelectedIndex(i);
                     init();
                     nowQuestionList.addAll(questions);
-                    revokeAction();
+                    revokeAction(true);
                 }
             }
             if (!flag) {
@@ -552,16 +414,15 @@ public class AdminController implements ActionListener {
                 if (withErrorCatch(request, false)) {
                     // 操作成功，更新视图
                     updateWithErrorCatch(() -> {
-                        var qPanel = new AdminQuestionPanel(clientSocket,
+                        var qPanel = new AdminQuestionPanel(
                                 questionPanel.get(questionPanel.size() - 1).getQuestionTableId() + 1, this);
                         questionPanel.add(qPanel);
                         tabbedPanel.add(questionTableName, qPanel);
-                        return null;
                     });
                     tabbedPanel.setSelectedIndex(tabbedPanel.getTabCount() - 1);
                     init();
                     nowQuestionList.addAll(questions);
-                    revokeAction();
+                    revokeAction(true);
                 } else {
                     JOptionPane.showMessageDialog(window, "新建题库时服务器出错！", "错误", JOptionPane.ERROR_MESSAGE);
                     return;
@@ -571,24 +432,14 @@ public class AdminController implements ActionListener {
             int succeedCount = 0;
             int failedCount = 0;
             for (int i = 0; i < questions.size(); i++) {
-                var map = new HashMap<String, String>();
-                map.put("questionTableId", String.valueOf(nowPanel.getQuestionTableId()));
-                var request = new ClientRequest();
-                request.setRequestType(TYPE.SetQuestion);
-                request.setData(map);
-                if (withErrorCatch(request, false)) {
+                if (setQuestionToServer()) {
                     succeedCount += 1;
                 } else {
                     failedCount += 1;
                 }
             }
-            for (int i = 0; i < questions.size(); i++) {
-                var map = questions.get(i);
-                map.put("questionTableId", String.valueOf(nowPanel.getQuestionTableId()));
-                var request = new ClientRequest();
-                request.setRequestType(TYPE.UpdateQuestion);
-                request.setData(map);
-                if (withErrorCatch(request, false)) {
+            for (Map<String, String> map : questions) {
+                if (updateQuestionToServer(map)) {
                     succeedCount += 1;
                 } else {
                     failedCount += 1;
@@ -605,14 +456,14 @@ public class AdminController implements ActionListener {
 
     /**
      * 将用户输入转换成标准题目格式
-     * 
-     * @param str
-     * @return 题目Map(text+chooseA/B/C/D)
+     *
+     * @param str 题目文本
+     * @return 题目Map(text + chooseA / B / C / D)
      * @throws Exception 用户输入异常
      */
     private Map<String, String> questionStrParser(String str) throws Exception {
         var map = new HashMap<String, String>();
-        String[] cRegex = new String[] { "A", "B", "C", "D" };
+        String[] cRegex = new String[]{"A", "B", "C", "D"};
         String sRegex = "[.][ ]";
         String[] a = str.split("[\n]");
         if (a.length != 5) {
@@ -624,5 +475,43 @@ public class AdminController implements ActionListener {
             map.put("choose" + cRegex[i - 1], a[i]);
         }
         return map;
+    }
+
+    private boolean setQuestionToServer() {
+        var map = new HashMap<String, String>();
+        map.put("questionTableId", String.valueOf(nowPanel.getQuestionTableId()));
+        var request = new ClientRequest();
+        request.setRequestType(TYPE.SetQuestion);
+        request.setData(map);
+        return withErrorCatch(request, false);
+    }
+
+    private boolean updateQuestionToServer(Map<String, String> data) {
+        data.put("questionTableId", String.valueOf(nowPanel.getQuestionTableId()));
+        var request = new ClientRequest();
+        request.setRequestType(TYPE.UpdateQuestion);
+        request.setData(data);
+        return withErrorCatch(request, false);
+    }
+
+    /**
+     * 获取当前题目库ID下的全部题目
+     *
+     * @return 题目信息列表
+     * @throws IllegalStateException 向服务器的出错
+     * @throws IOException           连接异常
+     */
+    public final ArrayList<Map<String, String>> getAllQuestions(int questionTableId) throws IllegalStateException,
+            IOException {
+        var request = new ClientRequest();
+        request.setRequestType(TYPE.GetAllQuestions);
+        var data = new HashMap<String, String>();
+        data.put("questionTableId", String.valueOf(questionTableId));
+        request.setData(data);
+        var rs = clientSocket.query(request);
+        if (rs.isSucceed()) {
+            return rs.getResult();
+        }
+        throw new IllegalStateException("连接错误！" + rs.getFailReason());
     }
 }

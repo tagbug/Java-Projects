@@ -1,21 +1,14 @@
 package Server.util;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
+import Server.excepitons.*;
 
-import Server.excepitons.DbException;
+import java.sql.*;
+import java.text.*;
+import java.util.*;
 
 /**
  * 数据库交互
- * 
+ *
  * @since 10
  */
 public class DbBridge {
@@ -35,19 +28,18 @@ public class DbBridge {
     private static final String ADD_QUESTION_LIST_QUERY2 = "CREATE TABLE questions_%s(id int primary key,text text,imgSrc text,chooseA text,chooseB text,chooseC text,chooseD text,answer char(1))";
     private static final String DELETE_QUESTION_LIST_QUERY1 = "DROP TABLE questions_%s";
     private static final String DELETE_QUESTION_LIST_QUERY2 = "DELETE FROM questions WHERE id=?";
-    private static final String[] REFRESH_LIST_QUERY = new String[] { "SET @i=0", "UPDATE %s SET `id`=(@i:=@i+1)",
-            "ALTER TABLE %s AUTO_INCREMENT=0" };
+    private static final String[] REFRESH_LIST_QUERY = new String[]{"SET @i=0", "UPDATE %s SET `id`=(@i:=@i+1)", "ALTER TABLE %s AUTO_INCREMENT=0"};
     private static final String QUESTION_QUERY = "SELECT * FROM questions_%s WHERE id=?";
     private static final String RECODE_QUESTION_QUERY = "INSERT INTO questions_%s VALUES(?,?,?,?,?,?,?,?)";
     private static final String DELETE_QUESTION_QUERY = "DELETE FROM questions_%s WHERE id=?";
     private static final String UPDATE_QUESTION_QUERY = "UPDATE questions_%s SET text=?,imgSrc=?,chooseA=?,chooseB=?,chooseC=?,chooseD=?,answer=? WHERE id=?";
     private static final String MAX_ID_QUERY = "SELECT MAX(id) FROM ";
     // 数据库连接对象
-    private Connection conn;
+    private final Connection conn;
 
     /**
      * 初始化，加载MySQL驱动并连接到目标数据库
-     * 
+     *
      * @throws ClassNotFoundException 加载MySQL驱动失败
      * @throws SQLException           与目标数据库建立连接失败
      */
@@ -58,7 +50,7 @@ public class DbBridge {
 
     /**
      * 用户注册操作
-     * 
+     *
      * @param name     用户名--不能重复
      * @param password 密码
      * @param isAdmin  是否是管理员
@@ -89,7 +81,7 @@ public class DbBridge {
 
     /**
      * 用户登录操作
-     * 
+     *
      * @param name     用户名
      * @param password 密码
      * @return 用户信息（id+userName+isAdmin）
@@ -119,7 +111,7 @@ public class DbBridge {
      * <strong>私有方法</strong>
      * <p>
      * 获取userId对应的用户信息
-     * 
+     *
      * @param userId 用户编号
      * @return 用户信息结果集
      * @throws DbException  用户不存在
@@ -137,7 +129,7 @@ public class DbBridge {
      * <strong>私有方法</strong>
      * <p>
      * 获取指定表中ID的最大值
-     * 
+     *
      * @param tableName 表名
      * @return MAX(ID)
      * @throws DbException  字段为空
@@ -156,7 +148,7 @@ public class DbBridge {
 
     /**
      * 刷新主键自增序列
-     * 
+     *
      * @param tableName 表名
      * @throws DbException  字段为空
      * @throws SQLException 数据库异常
@@ -179,7 +171,7 @@ public class DbBridge {
 
     /**
      * 查询考试分数操作
-     * 
+     *
      * @param userId 用户编号
      * @return 考试分数信息数组
      * @throws SQLException 数据库异常
@@ -205,7 +197,7 @@ public class DbBridge {
 
     /**
      * 录入成绩操作
-     * 
+     *
      * @param userId 用户编号
      * @param time   考试时间
      * @param score  考试分数
@@ -230,7 +222,7 @@ public class DbBridge {
 
     /**
      * 获取题目库列表
-     * 
+     *
      * @return 题目库信息
      * @throws SQLException 数据库异常
      */
@@ -249,10 +241,10 @@ public class DbBridge {
 
     /**
      * 增加题目库
-     * 
+     *
      * @param questionTableName 题目库名
-     * @return
-     * @throws SQLException
+     * @return 是否成功
+     * @throws SQLException 数据库异常
      */
     public boolean addQuestionList(String questionTableName) throws DbException, SQLException {
         int max = getMaxID("questions");
@@ -269,10 +261,10 @@ public class DbBridge {
 
     /**
      * 删除题目库
-     * 
-     * @param questionTableId
-     * @return
-     * @throws SQLException
+     *
+     * @param questionTableId 题库ID
+     * @return 是否成功
+     * @throws SQLException 数据库异常
      */
     public boolean deleteQuestionList(int questionTableId) throws SQLException {
         var stat = conn.prepareStatement(DELETE_QUESTION_LIST_QUERY1.replaceFirst("[%][s]", "" + questionTableId));
@@ -284,7 +276,7 @@ public class DbBridge {
 
     /**
      * 获取指定编号的题目
-     * 
+     *
      * @param id 题目编号
      * @return 题目信息
      * @throws DbException  题目不存在
@@ -313,7 +305,7 @@ public class DbBridge {
     /**
      * 根据题库题目总数随机获取n个题目 max<=10时，获取max道题目 10<max<=20时，获取10~max道题目
      * max>20时，获取max/2~MAX_COUNT道题目，但不超过MAX_COUNT道题
-     * 
+     *
      * @return 题目信息数组
      * @throws DbException  内部异常--逻辑错误/未知错误
      * @throws SQLException 数据库异常
@@ -322,7 +314,7 @@ public class DbBridge {
         int MAX_COUNT = 30;
         try {
             int max = getMaxID("questions_" + questionTableId);
-            int n = 0;
+            int n;
             var tmpRandom = new Random(System.currentTimeMillis() - (long) (Math.PI * 1000));
             if (max <= 10) {
                 n = max;
@@ -340,8 +332,8 @@ public class DbBridge {
             var result = new ArrayList<Map<String, String>>();
             // 如果 n <= max/2，就生成 n 个随机题目ID
             // 如果 n > max/2，就生成 max-n 个随机数，生成除这些随机数外的题目ID
+            Random ran = new Random(System.currentTimeMillis());
             if (n <= max / 2) {
-                Random ran = new Random(System.currentTimeMillis());
                 for (int i = 0; i < n; i++) {
                     int num = ran.nextInt(max) + 1;
                     while (!randomSet.add(num % max + 1)) {
@@ -352,7 +344,6 @@ public class DbBridge {
                     result.add(getQuestion(num, questionTableId));
                 }
             } else {
-                Random ran = new Random(System.currentTimeMillis());
                 for (int i = 0; i < max - n; i++) {
                     int num = ran.nextInt(max) + 1;
                     while (!randomSet.add(num % max + 1)) {
@@ -373,7 +364,7 @@ public class DbBridge {
 
     /**
      * 获取所有题目
-     * 
+     *
      * @param questionTableId 题目库表ID
      * @return 题库
      * @throws SQLException 数据库异常
@@ -395,8 +386,8 @@ public class DbBridge {
 
     /**
      * 录入题目操作
-     * 
-     * @param oriData 题目数据
+     *
+     * @param questionTableId 题库ID
      * @return 是否成功
      * @throws DbException  题目字段数量不匹配
      * @throws SQLException 数据库异常
@@ -412,7 +403,7 @@ public class DbBridge {
 
     /**
      * 删除题目操作
-     * 
+     *
      * @param id 题目ID
      * @return 是否成功
      * @throws DbException  题目不存在
@@ -428,7 +419,7 @@ public class DbBridge {
 
     /**
      * 更新题目操作
-     * 
+     *
      * @param oriData 题目数据
      * @return 是否成功
      * @throws DbException  题目信息异常
@@ -437,9 +428,9 @@ public class DbBridge {
     public boolean updateQuestion(Map<String, String> oriData) throws DbException, SQLException {
         String[] data;
         try {
-            data = new String[] { oriData.get("text"), oriData.get("imgSrc"), oriData.get("chooseA"),
+            data = new String[]{oriData.get("text"), oriData.get("imgSrc"), oriData.get("chooseA"),
                     oriData.get("chooseB"), oriData.get("chooseC"), oriData.get("chooseD"), oriData.get("answer"),
-                    oriData.get("id"), oriData.get("questionTableId") };
+                    oriData.get("id"), oriData.get("questionTableId")};
         } catch (Exception e) {
             throw new DbException("录入的题目信息异常！");
         }
@@ -448,60 +439,5 @@ public class DbBridge {
             stat.setString(i + 1, data[i]);
         }
         return stat.executeUpdate() == 1;
-    }
-
-    /**
-     * 单元测试
-     * 
-     * @param args
-     */
-    public static void main(String[] args) {
-        try {
-            var dbBridge = new DbBridge();
-            try {
-                try {
-                    if (dbBridge.register("李四", "123456", false)) {
-                        System.out.println("注册成功！");
-                    } else {
-                        System.out.println("注册失败！");
-                    }
-                } catch (DbException e) {
-                    System.out.println(e.getMessage());
-                }
-                var userInfo = dbBridge.login("李四", "123456");
-                if (userInfo == null) {
-                    System.out.println("登录失败，用户名或密码错误！");
-                } else {
-                    System.out.println("登录成功！用户ID：" + userInfo.get("id") + " 用户姓名：" + userInfo.get("userName")
-                            + " 用户权限：" + (userInfo.get("isAdmin").equals("0") ? "考生" : "管理员"));
-                }
-                // System.out.println(dbBridge.getMaxID("scores"));
-                // dbBridge.setScore(774889, "2021-07-01 11:10:23", 90.5);
-                // // dbBridge.addQuestionList("Java训练");
-                // dbBridge.setQuestion(new String[] { "下列哪个叙述是正确的？", "", "final类可以有子类",
-                // "abstract类中只可以有abstract方法",
-                // "abstract类中可以有非abstract方法，但该方法不可以用final修饰", "不知道", "C", "1" });
-                // // dbBridge.addQuestionList("交通法训练");
-                // dbBridge.setQuestion(new String[] { "遇到这种情况的路口，以下做法正确的是什么？", "", "沿左侧车道掉头",
-                // "该路口不能掉头",
-                // "选择中间车道掉头", "在路口内掉头", "B", "2" });
-                // dbBridge.setQuestion(
-                // new String[] { "这个路口允许车辆怎样行驶？",
-                // "https://sucimg.itc.cn/sblog/j68555cf0bbb4e98082241f252860d42f",
-                // "向左转弯", "直行", "直行或向右转弯", "向右转弯", "B", "2" });
-                dbBridge.refreshID("scores");
-            } catch (SQLException e) {
-                e.printStackTrace();
-                System.out.println(e.getErrorCode());
-            } catch (DbException e) {
-                System.out.println(e.getMessage());
-            }
-        } catch (ClassNotFoundException e) {
-            System.out.println("加载数据库驱动失败");
-            e.printStackTrace();
-        } catch (SQLException e) {
-            System.out.println("与目标数据库建立连接失败");
-            e.printStackTrace();
-        }
     }
 }

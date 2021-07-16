@@ -1,9 +1,8 @@
-package Client.GUI;
-
-import java.net.URL;
+package Client.GUI.Panel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.*;
 
 /**
  * 题目容器，管理员和考生共用的基础容器
@@ -12,26 +11,26 @@ import java.awt.*;
  */
 public class QuestionPanel extends JPanel {
     private static final String[] chooseStr = new String[] { "A", "B", "C", "D" };
-    private JPanel inPanel;
     private JTextArea textArea;// 题目文本容器
-    private JLabel imgArea;// 题目图片容器
     private JRadioButton[] chooses;// 单选按钮
-    private String imgSrc;// 题目图片URL地址
+    private final String imgSrc;// 题目图片URL地址
 
-    QuestionPanel(String questionText, String imgSrc, String answer) {
+    public QuestionPanel(String questionText, String imgSrc, String answer) {
         this.imgSrc = imgSrc;
         setLayout(new BorderLayout());
         init(questionText, answer);
     }
 
     void init(String questionText, String answer) {
-        inPanel = new JPanel();
+        JPanel inPanel = new JPanel();
         inPanel.setLayout(new GridLayout(1, 2));
         // 题目文本处理
         textArea = new JTextArea(questionText);
         textArea.setFont(new Font("宋体", Font.BOLD, 17));
         textArea.setLineWrap(true);
         // 题目图片处理
+        // 题目图片容器
+        JLabel imgArea;
         if (imgSrc == null || imgSrc.isEmpty()) {
             imgArea = new JLabel("此题无图");
             imgArea.setFont(new Font("微软雅黑", Font.BOLD, 30));

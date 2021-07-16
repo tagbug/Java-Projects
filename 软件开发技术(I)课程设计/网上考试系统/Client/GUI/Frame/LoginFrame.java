@@ -1,9 +1,9 @@
-package Client.GUI;
+package Client.GUI.Frame;
+
+import Client.GUI.Panel.*;
+import Client.util.*;
 
 import javax.swing.*;
-
-import Client.util.ClientSocket;
-
 import java.awt.*;
 
 /**
@@ -28,6 +28,7 @@ public class LoginFrame extends JFrame {
         var registerPanel = new RegisterPanel(clientSocket);
         tabPanel.add("我要登陆", loginPanel);
         tabPanel.add("我要注册", registerPanel);
+        tabPanel.add("3200608080 陈欣阳", new JPanel());
         add(tabPanel, BorderLayout.CENTER);
     }
 }

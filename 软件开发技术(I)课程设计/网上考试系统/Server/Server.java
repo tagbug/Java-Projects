@@ -1,10 +1,9 @@
 package Server;
 
-import java.net.ServerSocket;
-import java.sql.SQLException;
+import Server.util.*;
 
-import Server.util.ActionThread;
-import Server.util.DbBridge;
+import java.net.*;
+import java.sql.*;
 
 /**
  * 服务器主类，初始化数据库并开始监听客户连接
@@ -13,6 +12,7 @@ import Server.util.DbBridge;
  */
 public class Server {
     public static void main(String[] args) {
+        System.out.println("3200608080 陈欣阳");
         try {
             var dbBridge = new DbBridge();
             try (var serverSocket = new ServerSocket(6666)/* 监听端口6666 */) {

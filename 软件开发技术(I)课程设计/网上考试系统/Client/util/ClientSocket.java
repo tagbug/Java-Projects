@@ -1,13 +1,9 @@
 package Client.util;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import Data.*;
 
-import Data.ClientRequest;
-import Data.ServerResponse;
+import java.io.*;
+import java.net.*;
 
 /**
  * 客户端网络接口
@@ -31,8 +27,8 @@ public class ClientSocket {
     /**
      * 配置服务器域名和端口
      * 
-     * @param host
-     * @param port
+     * @param host 服务器地址
+     * @param port 端口
      */
     public void config(String host, int port) {
         this.host = host;

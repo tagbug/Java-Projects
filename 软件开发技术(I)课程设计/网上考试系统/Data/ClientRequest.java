@@ -1,13 +1,13 @@
 package Data;
 
-import java.io.Serializable;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 /**
  * 用户请求包，用于封装用户请求
  */
 public class ClientRequest implements Serializable {
-    public static enum TYPE {
+    public enum TYPE {
         Register, Login, SetScore, SetQuestion, GetScore, GetQuestionList, GetQuestion, GetRandomQuestions,
         GetAllQuestions, DeleteQuestion, AddQuestionList, DeleteQuestionList, UpdateQuestion, RefreshTable
     }

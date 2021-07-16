@@ -1,14 +1,12 @@
 package Client;
 
-import java.awt.EventQueue;
-import java.io.IOException;
+import Client.GUI.Frame.*;
+import Client.util.*;
+import com.formdev.flatlaf.*;
+
 import javax.swing.*;
 import java.awt.*;
-
-import com.formdev.flatlaf.FlatDarculaLaf;
-
-import Client.GUI.LoginFrame;
-import Client.util.ClientSocket;
+import java.io.*;
 
 /**
  * 客户端主类，配置Socket，连接服务器，并启动登录&注册窗口
@@ -21,7 +19,7 @@ public class Client {
             // Swing主题设置
             FlatDarculaLaf.setup();
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
         // Swing全局字体设置
         Font font = new Font("微软雅黑", Font.PLAIN, 13);

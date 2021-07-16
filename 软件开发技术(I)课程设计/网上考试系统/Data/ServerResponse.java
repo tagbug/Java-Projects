@@ -1,8 +1,7 @@
 package Data;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 /**
  * 服务器响应包，用于封装服务器响应
