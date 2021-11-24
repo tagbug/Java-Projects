@@ -1,17 +1,17 @@
 package 数字时钟;
 
 public class ClockExample {
-    private int hour, min, sec;//成员变量
+    private int hour, min, sec;// 成员变量
 
     ClockExample(int hour, int min, int sec) {
-        //类构造方法
+        // 类构造方法
         this.hour = hour >= 0 ? hour : 0;
         this.min = min >= 0 ? min : 0;
         this.sec = sec >= 0 ? sec : 0;
     }
     
     public void run() {
-        //走时
+        // 走时
         sec += 1;
         if (sec == 60) {
             sec = 0;

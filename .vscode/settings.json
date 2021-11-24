@@ -1,0 +1,25 @@
+{
+    "java.project.sourcePaths": [
+        "软件开发技术(I)上机作业/实验五 流",
+        "vscode Examples",
+        "数据结构与算法"
+    ],
+    "java.project.referencedLibraries": {
+        "include": [],
+        "exclude": []
+    },
+    "java.saveActions.organizeImports": true,
+    "java.codeGeneration.generateComments": true,
+    "java.codeGeneration.hashCodeEquals.useInstanceof": true,
+    "java.codeGeneration.hashCodeEquals.useJava7Objects": true,
+    "java.codeGeneration.useBlocks": true,
+    "java.completion.guessMethodArguments": true,
+    "java.completion.filteredTypes": [
+        "java.awt.*",
+        "com.sun.*",
+        "sun.*"
+    ],
+    "cSpell.words": [
+        "inorder"
+    ],
+}
